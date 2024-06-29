@@ -21,15 +21,19 @@
    git clone https://github.com/oksanochka88/messengerGO
    cd yourrepository
 2. Установите зависимости:
+   ```sh
    go mod tidy
 3. Настройте переменные окружения:
 Создайте файл .env и добавьте в него необходимые переменные окружения:
+   ```sh
    DB_USER=
    DB_PASSWORD=
    DB_HOST=
    DB_NAME=
    JWT_SECRET=
 4. Выполните миграции базы данных:
+   ```sh
    migrate -database postgres://postgres:password@localhost:5432/mydb?sslmode=disable -path ./migrations up
 5. Запустите сервер:
+   ```sh
    go run main.go
