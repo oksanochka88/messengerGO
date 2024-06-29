@@ -13,3 +13,23 @@
 - **База данных**: PostgreSQL
 - **Аутентификация и авторизация**: JSON Web Tokens (JWT)
 - **Обмен сообщениями в реальном времени**: WebSocket
+
+## Установка и запуск
+
+1. Клонируйте репозиторий:
+   ```sh
+   git clone https://github.com/oksanochka88/messengerGO
+   cd yourrepository
+2. Установите зависимости:
+   go mod tidy
+3. Настройте переменные окружения:
+Создайте файл .env и добавьте в него необходимые переменные окружения:
+   DB_USER=
+   DB_PASSWORD=
+   DB_HOST=
+   DB_NAME=
+   JWT_SECRET=
+4. Выполните миграции базы данных:
+   migrate -database postgres://postgres:password@localhost:5432/mydb?sslmode=disable -path ./migrations up
+5. Запустите сервер:
+   go run main.go
