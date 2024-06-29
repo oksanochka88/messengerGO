@@ -1,0 +1,3 @@
+migrate -database postgres://postgres:password@localhost:5432/mydb?sslmode=disable -path ./migrations up
+// выполнение всех миграци  подряд
+// т.е последовательно выпол

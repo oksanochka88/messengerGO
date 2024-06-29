@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SqlDialectMappings">
+    <file url="file://$PROJECT_DIR$/database/migrations/001_create_users_table.up.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/database/migrations/002_create_user_tokens_table.up.sql" dialect="GenericSQL" />
+  </component>
+</project>
