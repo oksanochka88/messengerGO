@@ -17,7 +17,14 @@ func AuthMiddleware(secret string) gin.HandlerFunc {
 			return
 		}
 
-		tokenString := strings.Split(authHeader, "Bearer ")[1]
+		parts := strings.Split(authHeader, "Bearer ")
+		if len(parts) != 2 {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid Authorization header format"})
+			c.Abort()
+			return
+		}
+
+		tokenString := parts[1]
 		token, _ := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
@@ -26,7 +33,11 @@ func AuthMiddleware(secret string) gin.HandlerFunc {
 		})
 
 		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-			c.Set("userID", claims["user_id"])
+			userID, ok := claims["user_id"].(string)
+			if !ok {
+				userID = fmt.Sprintf("%v", claims["user_id"])
+			}
+			c.Set("userID", userID)
 		} else {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
 			c.Abort()

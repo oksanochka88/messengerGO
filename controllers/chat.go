@@ -3,8 +3,10 @@ package controllers
 import (
 	"backMessage/models"
 	"database/sql"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 )
@@ -17,22 +19,26 @@ func CreateChatHandler(c *gin.Context) {
 		return
 	}
 
+	userIDStr, ok := userID.(string)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID format"})
+		return
+	}
+
+	intUserID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error converting user ID"})
+		return
+	}
+
 	var request struct {
-		Name         string `json:"name"`
-		Participants []int  `json:"participants"`
+		Name         string   `json:"name"`
+		Participants []string `json:"participants"` // Используем ники вместо ID
 	}
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
 	}
-
-	// Добавляем создателя чата в список участников
-	intUserID, err := strconv.Atoi(userID.(string))
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error converting user ID"})
-		return
-	}
-	request.Participants = append(request.Participants, intUserID)
 
 	// Соединение с базой данных
 	db, err := sql.Open("postgres", "user=youruser password=yourpassword dbname=yourdb sslmode=disable")
@@ -42,8 +48,19 @@ func CreateChatHandler(c *gin.Context) {
 	}
 	defer db.Close()
 
+	// Получаем ID участников по их никнеймам
+	participantsIDs, err := models.GetUserIDsByNicknames(db, request.Participants)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get user IDs"})
+		return
+	}
+
+	// Добавляем создателя чата в список участников
+	participantsIDs = append(participantsIDs, intUserID)
+
+	// Создаем чат
 	chat := models.Chat{Name: request.Name, CreatedAt: time.Now()}
-	if err := models.CreateChat(db, &chat, request.Participants); err != nil {
+	if err := models.CreateChat(db, &chat, participantsIDs); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create chat"})
 		return
 	}
@@ -58,9 +75,11 @@ func GetChatsHandler(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
+	connStr := fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable",
+		os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_HOST"), os.Getenv("DB_NAME"))
 
 	// Соединение с базой данных
-	db, err := sql.Open("postgres", "user=youruser password=yourpassword dbname=yourdb sslmode=disable")
+	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database connection error"})
 		return
