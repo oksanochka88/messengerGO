@@ -1,27 +1,41 @@
 package models
 
 import (
-	"backMessage/database"
-	"log"
+	"database/sql"
 	"time"
 )
 
 type Message struct {
 	ID        int       `json:"id"`
 	ChatID    int       `json:"chat_id"`
-	UserID    int       `json:"user_id"`
+	UserID    string    `json:"user_id"`
 	Content   string    `json:"content"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
-func SendMessage(chatID, userID int, content string) error {
-	query := `INSERT INTO messages (chat_id, user_id, content, created_at) VALUES ($1, $2, $3, $4)`
-	_, err := database.DB.Exec(query, chatID, userID, content, time.Now())
+// CreateMessage создает новое сообщение в чате
+func CreateMessage(db *sql.DB, message *Message) error {
+	_, err := db.Exec("INSERT INTO messages (chat_id, user_id, content, created_at) VALUES ($1, $2, $3, $4)",
+		message.ChatID, message.UserID, message.Content, message.CreatedAt)
+	return err
+}
+
+// GetMessagesByChatID возвращает все сообщения в чате
+func GetMessagesByChatID(db *sql.DB, chatID string) ([]Message, error) {
+	rows, err := db.Query("SELECT id, chat_id, user_id, content, created_at FROM messages WHERE chat_id = $1", chatID)
 	if err != nil {
-		log.Printf("Error inserting message into database: %v", err)
-		return err
+		return nil, err
+	}
+	defer rows.Close()
+
+	var messages []Message
+	for rows.Next() {
+		var message Message
+		if err := rows.Scan(&message.ID, &message.ChatID, &message.UserID, &message.Content, &message.CreatedAt); err != nil {
+			return nil, err
+		}
+		messages = append(messages, message)
 	}
 
-	log.Printf("Message sent to chat %d", chatID)
-	return nil
+	return messages, nil
 }

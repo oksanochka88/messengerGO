@@ -5,6 +5,7 @@ import (
 	"backMessage/controllers/auth"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"os"
 )
 
 func SetupRouter() *gin.Engine {
@@ -14,16 +15,18 @@ func SetupRouter() *gin.Engine {
 	r.POST("/login", auth.Login)
 	r.POST("/register", auth.Register)
 
-	// Маршруты для чатов и сообщений
-	//r.POST("/chats", controllers.CreateChat)
-	//r.GET("/chats", controllers.GetChats)
-	//r.POST("/chats/:chat_id/messages", controllers.SendMessage)
-	//r.GET("/chats/:chat_id/messages", controllers.GetMessages)
-
 	// Проверка доступности сервиса
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "pong"})
 	})
+
+	authUsers := r.Group("/")
+	authUsers.Use(auth.AuthMiddleware(os.Getenv("JWT_SECRET")))
+
+	authUsers.POST("/chats", controllers.CreateChatHandler)
+	authUsers.GET("/chats", controllers.GetChatsHandler)
+	authUsers.POST("/chats/:chat_id/messages", controllers.SendMessageHandler)
+	authUsers.GET("/chats/:chat_id/messages", controllers.GetMessagesHandler)
 
 	// Маршруты для пользователя
 	userRoutes := r.Group("/user")
