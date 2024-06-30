@@ -113,7 +113,7 @@ func GetChatsByUserID(db *sql.DB, userID string) ([]Chat, error) {
 	query := `
         SELECT c.id, c.name, c.created_at
         FROM chats c
-        JOIN chat_participants cp ON c.id = cp.chat_id
+        JOIN chatparticipants cp ON c.id = cp.chat_id
         WHERE cp.user_id = $1`
 
 	rows, err := db.Query(query, userID)
