@@ -19,6 +19,8 @@ func CreateChatHandler(c *gin.Context) {
 		return
 	}
 
+	fmt.Println(userID)
+
 	userIDStr, ok := userID.(string)
 	if !ok {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID format"})
@@ -40,8 +42,10 @@ func CreateChatHandler(c *gin.Context) {
 		return
 	}
 
+	connStr := fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable",
+		os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_HOST"), os.Getenv("DB_NAME"))
 	// Соединение с базой данных
-	db, err := sql.Open("postgres", "user=youruser password=yourpassword dbname=yourdb sslmode=disable")
+	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database connection error"})
 		return

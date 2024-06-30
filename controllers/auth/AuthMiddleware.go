@@ -33,9 +33,9 @@ func AuthMiddleware(secret string) gin.HandlerFunc {
 		})
 
 		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-			userID, ok := claims["user_id"].(string)
+			userID, ok := claims["userID"].(string)
 			if !ok {
-				userID = fmt.Sprintf("%v", claims["user_id"])
+				userID = fmt.Sprintf("%v", claims["userID"])
 			}
 			c.Set("userID", userID)
 		} else {
