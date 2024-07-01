@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-// CreateChatHandler создает новый чат
+// CreateChatHandler создает новый чат+
 func CreateChatHandler(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
@@ -72,7 +72,7 @@ func CreateChatHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"chat": chat})
 }
 
-// GetChatsHandler возвращает все чаты пользователя
+// GetChatsHandler возвращает все чаты пользователя+
 func GetChatsHandler(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
@@ -99,7 +99,7 @@ func GetChatsHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"chats": chats})
 }
 
-// SendMessageHandler отправляет сообщение в чат
+// SendMessageHandler отправляет сообщение в чат+
 func SendMessageHandler(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
@@ -117,8 +117,11 @@ func SendMessageHandler(c *gin.Context) {
 		return
 	}
 
+	connStr := fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable",
+		os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_HOST"), os.Getenv("DB_NAME"))
+
 	// Соединение с базой данных
-	db, err := sql.Open("postgres", "user=youruser password=yourpassword dbname=yourdb sslmode=disable")
+	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database connection error"})
 		return
@@ -149,14 +152,33 @@ func SendMessageHandler(c *gin.Context) {
 // GetMessagesHandler возвращает все сообщения чата
 func GetMessagesHandler(c *gin.Context) {
 	chatID := c.Param("chat_id")
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	connStr := fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable",
+		os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_HOST"), os.Getenv("DB_NAME"))
 
 	// Соединение с базой данных
-	db, err := sql.Open("postgres", "user=youruser password=yourpassword dbname=yourdb sslmode=disable")
+	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database connection error"})
 		return
 	}
 	defer db.Close()
+
+	// Проверка, является ли пользователь участником чата
+	isInChat, err := models.IsUserInChat(db, chatID, userID.(string))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check chat participation"})
+		return
+	}
+	if !isInChat {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
+		return
+	}
 
 	messages, err := models.GetMessagesByChatID(db, chatID)
 	if err != nil {

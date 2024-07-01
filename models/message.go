@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"log"
 	"time"
 )
 
@@ -17,6 +18,10 @@ type Message struct {
 func CreateMessage(db *sql.DB, message *Message) error {
 	_, err := db.Exec("INSERT INTO messages (chat_id, user_id, content, created_at) VALUES ($1, $2, $3, $4)",
 		message.ChatID, message.UserID, message.Content, message.CreatedAt)
+	if err != nil {
+		log.Printf("Error creating message: %v", err)
+		log.Printf("Message details: ChatID=%d, UserID=%d, Content=%s, CreatedAt=%v", message.ChatID, message.UserID, message.Content, message.CreatedAt)
+	}
 	return err
 }
 
@@ -38,4 +43,16 @@ func GetMessagesByChatID(db *sql.DB, chatID string) ([]Message, error) {
 	}
 
 	return messages, nil
+}
+
+func IsUserInChat(db *sql.DB, chatID string, userID string) (bool, error) {
+	var exists bool
+	query := `
+        SELECT EXISTS (
+            SELECT 1
+            FROM chatparticipants
+            WHERE chat_id = $1 AND user_id = $2
+        )`
+	err := db.QueryRow(query, chatID, userID).Scan(&exists)
+	return exists, err
 }
