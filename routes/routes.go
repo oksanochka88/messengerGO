@@ -28,10 +28,12 @@ func SetupRouter() *gin.Engine {
 	authUsers.POST("/chats/:chat_id/messages", controllers.SendMessageHandler)
 	authUsers.GET("/chats/:chat_id/messages", controllers.GetMessagesHandler)
 
+	authUsers.GET("/profile", controllers.GetUserProfile)
+
 	// Маршруты для пользователя
 	userRoutes := r.Group("/user")
 	{
-		userRoutes.GET("/:user_id", controllers.GetUserProfile)
+		//userRoutes.GET("/profile", controllers.GetUserProfile)
 		userRoutes.PUT("/:user_id", controllers.UpdateUserProfile)
 	}
 

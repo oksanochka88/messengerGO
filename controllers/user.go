@@ -7,9 +7,13 @@ import (
 )
 
 func GetUserProfile(c *gin.Context) {
-	userID := c.Param("user_id")
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authorized"})
+		return
+	}
 
-	user, err := models.GetUserByID(userID)
+	user, err := models.GetUserByID(userID.(string))
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return

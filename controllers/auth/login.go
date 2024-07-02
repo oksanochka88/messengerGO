@@ -11,28 +11,6 @@ type LoginRequest struct {
 	Password string `json:"password"`
 }
 
-//func Login(c *gin.Context) {
-//	var loginRequest LoginRequest
-//	if err := c.ShouldBindJSON(&loginRequest); err != nil {
-//		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-//		return
-//	}
-//
-//	user, err := models.AuthenticateUser(loginRequest.Username, loginRequest.Password)
-//	if err != nil {
-//		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid username or password"})
-//		return
-//	}
-//
-//	token, err := CreateJWT(user.ID)
-//	if err != nil {
-//		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
-//		return
-//	}
-//
-//	c.JSON(http.StatusOK, gin.H{"token": token})
-//}
-
 func Login(c *gin.Context) {
 	var loginRequest LoginRequest
 	if err := c.ShouldBindJSON(&loginRequest); err != nil {
