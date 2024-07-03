@@ -29,6 +29,7 @@ func SetupRouter() *gin.Engine {
 	authUsers.GET("/chats/:chat_id/messages", controllers.GetMessagesHandler)
 
 	authUsers.GET("/profile", controllers.GetUserProfile)
+	authUsers.GET("/check/:username", controllers.CheckUserByUsername)
 
 	// Маршруты для пользователя
 	userRoutes := r.Group("/user")

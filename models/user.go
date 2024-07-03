@@ -133,3 +133,28 @@ type UserUpdate struct {
 func generateUniqueID() string {
 	return uuid.New().String()
 }
+
+func GetUserByUsername(username string) (*User, error) {
+	// Строка подключения
+	connStr := fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable",
+		os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_HOST"), os.Getenv("DB_NAME"))
+
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	var user User
+	query := "SELECT id, username, email, password, photo, unique_id, about FROM users WHERE username = $1"
+
+	err = db.QueryRow(query, username).Scan(&user.ID, &user.Username, &user.Email, &user.Password, &user.Photo, &user.UniqueId, &user.About)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil // Пользователь не найден
+		}
+		return nil, fmt.Errorf("error getting user by username: %w", err)
+	}
+
+	return &user, nil
+}
