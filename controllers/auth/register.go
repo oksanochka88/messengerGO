@@ -13,6 +13,7 @@ type RegisterRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 	About    string `json:"about"`
+	Photo    []byte `json:"photo"`
 }
 
 func Register(c *gin.Context) {
@@ -27,7 +28,7 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	err := models.CreateUser(registerRequest.Username, registerRequest.Email, registerRequest.Password, registerRequest.About, nil) // nil для photo в данном примере
+	err := models.CreateUser(registerRequest.Username, registerRequest.Email, registerRequest.Password, registerRequest.About, registerRequest.Photo) // nil для photo в данном примере
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register user"})
 		return
