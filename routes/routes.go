@@ -34,7 +34,6 @@ func SetupRouter() *gin.Engine {
 	// Маршруты для пользователя
 	userRoutes := r.Group("/user")
 	{
-		//userRoutes.GET("/profile", controllers.GetUserProfile)
 		userRoutes.PUT("/:user_id", controllers.UpdateUserProfile)
 	}
 
