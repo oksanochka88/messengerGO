@@ -2,6 +2,7 @@ package routes
 
 import (
 	"backMessage/controllers"
+	"backMessage/controllers/WebSoket"
 	"backMessage/controllers/auth"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -25,11 +26,14 @@ func SetupRouter() *gin.Engine {
 
 	authUsers.POST("/chats", controllers.CreateChatHandler)
 	authUsers.GET("/chats", controllers.GetChatsHandler)
+
 	authUsers.POST("/chats/:chat_id/messages", controllers.SendMessageHandler)
 	authUsers.GET("/chats/:chat_id/messages", controllers.GetMessagesHandler)
 
 	authUsers.GET("/profile", controllers.GetUserProfile)
 	authUsers.GET("/check/:username", controllers.CheckUserByUsername)
+
+	authUsers.GET("/ws", WebSoket.WebSocketHandler)
 
 	// Маршруты для пользователя
 	userRoutes := r.Group("/user")

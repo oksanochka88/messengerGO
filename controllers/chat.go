@@ -1,10 +1,13 @@
 package controllers
 
 import (
+	"backMessage/controllers/WebSoket"
 	"backMessage/models"
 	"database/sql"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -99,7 +102,56 @@ func GetChatsHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"chats": chats})
 }
 
-// SendMessageHandler отправляет сообщение в чат+
+//// SendMessageHandler отправляет сообщение в чат+
+//func SendMessageHandler(c *gin.Context) {
+//	userID, exists := c.Get("userID")
+//	if !exists {
+//		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+//		return
+//	}
+//
+//	chatID := c.Param("chat_id")
+//
+//	var request struct {
+//		Content string `json:"content"`
+//	}
+//	if err := c.ShouldBindJSON(&request); err != nil {
+//		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+//		return
+//	}
+//
+//	connStr := fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable",
+//		os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_HOST"), os.Getenv("DB_NAME"))
+//
+//	// Соединение с базой данных
+//	db, err := sql.Open("postgres", connStr)
+//	if err != nil {
+//		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database connection error"})
+//		return
+//	}
+//	defer db.Close()
+//
+//	chatIDInt, err := strconv.Atoi(chatID)
+//	if err != nil {
+//		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid chat ID"})
+//		return
+//	}
+//
+//	message := models.Message{
+//		ChatID:    chatIDInt,
+//		UserID:    userID.(string),
+//		Content:   request.Content,
+//		CreatedAt: time.Now(),
+//	}
+//
+//	if err := models.CreateMessage(db, &message); err != nil {
+//		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send message"})
+//		return
+//	}
+//
+//	c.JSON(http.StatusOK, gin.H{"message": message})
+//}
+
 func SendMessageHandler(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
@@ -146,7 +198,37 @@ func SendMessageHandler(c *gin.Context) {
 		return
 	}
 
+	// Получение всех участников чата
+	participants, err := models.GetChatParticipants(db, chatIDInt)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get chat participants"})
+		return
+	}
+
+	// Уведомление участников через WebSocket
+	for _, participant := range participants {
+		if participant.UserID != userID { // Не уведомлять отправителя
+			notifyUser(participant.UserID, "new_message")
+		}
+	}
+
 	c.JSON(http.StatusOK, gin.H{"message": message})
+}
+
+func notifyUser(userID int, message string) {
+	userIDStr := strconv.Itoa(userID)
+	conn, ok := WebSoket.Connections[string(userIDStr)]
+	if !ok {
+		log.Printf("User %d not connected", userID)
+		return
+	}
+
+	err := conn.WriteMessage(websocket.TextMessage, []byte(message))
+	if err != nil {
+		log.Printf("Error sending message to user %d: %v", userID, err)
+		conn.Close()
+		delete(WebSoket.Connections, string(userID))
+	}
 }
 
 // GetMessagesHandler возвращает все сообщения чата
