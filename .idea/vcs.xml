@@ -3,5 +3,6 @@
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/back_messenger" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/messengerGO" vcs="Git" />
   </component>
 </project>

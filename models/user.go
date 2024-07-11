@@ -21,6 +21,12 @@ type User struct {
 	About    string `json:"about"`
 }
 
+type UserUpdate struct {
+	Email string `json:"email"`
+	About string `json:"about"`
+	Photo []byte `json:"photo"`
+}
+
 func CreateUser(username, email, password, about string, photo []byte) error {
 	// Хэширование пароля
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -113,21 +119,19 @@ func GetUserByID(userID string) (*User, error) {
 }
 
 func UpdateUser(userID string, userUpdate UserUpdate) error {
-	db, err := sql.Open("postgres", "your_connection_string")
+	// Строка подключения
+	connStr := fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable",
+		os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_HOST"), os.Getenv("DB_NAME"))
+
+	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		return err
 	}
 	defer db.Close()
 
-	_, err = db.Exec("UPDATE users SET username = $1, email = $2, age = $3 WHERE id = $4",
-		userUpdate.Username, userUpdate.Email, userUpdate.Age, userID)
+	_, err = db.Exec("UPDATE users SET email = $1, about = $2, photo = $3 WHERE id = $4",
+		userUpdate.Email, userUpdate.About, userUpdate.Photo, userID)
 	return err
-}
-
-type UserUpdate struct {
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Age      int    `json:"age"`
 }
 
 func generateUniqueID() string {

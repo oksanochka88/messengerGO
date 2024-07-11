@@ -26,6 +26,7 @@ func SetupRouter() *gin.Engine {
 
 	authUsers.POST("/chats", controllers.CreateChatHandler)
 	authUsers.GET("/chats", controllers.GetChatsHandler)
+	authUsers.DELETE("/chats/:chat_id", controllers.DeleteChatHandler)
 
 	authUsers.POST("/chats/:chat_id/messages", controllers.SendMessageHandler)
 	authUsers.GET("/chats/:chat_id/messages", controllers.GetMessagesHandler)
